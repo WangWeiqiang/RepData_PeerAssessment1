@@ -8,18 +8,109 @@ output:
 
 ## Loading and preprocessing the data
 
+```{r}
+srouceData<-read.csv("activity.csv")
+tidyData<-na.omit(srouceData)
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r}
+stepsPerDay=aggregate(tidyData$steps, by=list(substr(tidyData$date,1,10)), FUN=sum)
+colnames(stepsPerDay)<-c("Day","Steps")
+stepsPerDay
+```
 
+```{r}
+barplot(stepsPerDay$Steps,axisnames=TRUE,names.arg=stepsPerDay$Day,main="Total number of steps taken per day",xlab="Date",ylab="Numbers of Steps")
+```
 
+```{r}
+mean(stepsPerDay$Steps)
+median(stepsPerDay$Steps)
+```
 
 ## What is the average daily activity pattern?
+```{r}
+numberOfDays=length(summary(tidyData$date))
+activityPatternData=aggregate(tidyData$steps/numberOfDays, by=list(tidyData$interval), FUN=mean)
+colnames(activityPatternData)<-c("interval","Steps")
+plot(activityPatternData,type="l")
+```
 
-
-
+###Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+```{r}
+maxNumberOfSteps=max( activityPatternData$Steps)
+activityPatternData[activityPatternData$Steps ==maxNumberOfSteps,]
+```
 ## Imputing missing values
+### total number of missing values in the dataset
+```{r}
+targetColumn <- srouceData$steps
+nrow(srouceData[is.na(targetColumn),])
+```
+### filling in all of the missing values
+```{r}
+newData<-srouceData
+stepsPer5minute=as.integer(sum(tidyData$steps)/nrow(tidyData))
+for (i in 1:nrow(newData)){
+  if(is.na(newData[i,]$steps)){
+    newData[i,]$steps=stepsPer5minute
+  }
+}
+```
 
+### histogram of the total number of steps taken each day
 
+```{r}
+stepsPerDay=aggregate(newData$steps, by=list(substr(newData$date,1,10)), FUN=sum)
+colnames(stepsPerDay)<-c("Day","Steps")
+barplot(stepsPerDay$Steps,axisnames=TRUE,names.arg=stepsPerDay$Day,main="Total number of steps taken per day",xlab="Date",ylab="Numbers of Steps")
+```
+
+### mean total number of steps taken per day
+
+```{r}
+mean(stepsPerDay$Steps)
+```
+
+### median total number of steps taken per day
+
+```{r}
+median(stepsPerDay$Steps)
+```
+These values are differ from the estimates from the first part of the assignment.
+the mean and mdian values are lower than part 1, because the sampling frequency are higher.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+newData["DayType"]<-NA
+for (i in 1:nrow(newData)){
+  
+    date <- as.POSIXlt(newData[i,]$date,format="%Y-%m-%d")
+    if(date$wday==0 | date$wday==6){
+      newData[i,]$DayType<-"weekend"
+    }
+    else
+    {
+      newData[i,]$DayType<-"weekday"
+    }
+  
+}
+
+weekendData=subset(newData,DayType=="weekend")
+weekdaysData=subset(newData,DayType=="weekday")
+
+
+weekendActivity=aggregate(weekendData$steps/length(summary(weekendData$date)), by=list(weekendData$interval), FUN=mean)
+colnames(weekendActivity)<-c("interval","Steps")
+
+weekdaysActivity=aggregate(weekdaysData$steps/length(summary(weekdaysData$date)), by=list(weekdaysData$interval), FUN=mean)
+colnames(weekdaysActivity)<-c("interval","Steps")
+
+par(mfrow=c(2,1))
+plot(weekendActivity,type="l",xlab="weekend",ylab="Number of steps")
+plot(weekdaysActivity,type="l",xlab="weekday",ylab="Number of steps")
+
+
+```
