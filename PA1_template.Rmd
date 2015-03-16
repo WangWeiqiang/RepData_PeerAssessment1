@@ -1,8 +1,8 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "RepData_PeerAssessment1"
+author: "Wang Weiqiang"
+date: "Friday, March 14, 2015"
+output: html_document
 ---
 
 
